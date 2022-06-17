@@ -1,23 +1,28 @@
 import logo from './logo.svg';
 import './App.css';
+import React, { Component } from "react";
+import NaviBar from "./components/navibar";
+import { Routes, Route, NavLink, BrowserRouter } from "react-router-dom";
+import MediaLibrary from "./components/medialibrary";
+import TweetComposer from "./components/tweetcomposer";
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+
+      <BrowserRouter>
+          <div>
+            <NaviBar />
+          </div>
+          <div className="content">
+            <Routes>
+              <Route path="/media" element={<MediaLibrary />} />
+              <Route path="/composer" element={<TweetComposer />} />
+              <Route exact path="/" element={<MediaLibrary />} />
+            </Routes>
+          </div>
+        </BrowserRouter>
     </div>
   );
 }
