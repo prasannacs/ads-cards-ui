@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col } from "react-bootstrap";
-import { Card, CardGroup, ToggleButton, Button, Modal, Form, Toast } from "react-bootstrap";
+import { Card, ToggleButton, Button, Modal, Form, Toast } from "react-bootstrap";
 import { requestTwitterToken, getAccessTokens } from "./services"
 import config from '../config.js'
 
@@ -13,6 +13,7 @@ export default function TweetComposer() {
   const [oauthTokenSecret, setOauthTokenSecret] = useState(null);
   const [userId, setUserId] = useState(null);
   const [cardList, setCardList] = useState([]);
+  const [carouselList, setCarouselList] = useState([]);
   const [radioValue, setRadioValue] = useState('1');
   const [modalVis, setModalVis] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
@@ -41,21 +42,31 @@ export default function TweetComposer() {
         setOauthToken(accessTokens.oauthToken);
         setOauthTokenSecret(accessTokens.oauthTokenSecret);
         setUserId(accessTokens.userId);
-        fetchCards(accessTokens.userId);
+        fetchCards(accessTokens.userId, 'website');
+        fetchCards(accessTokens.userId, null);
       })
   }
 
 
-  function fetchCards(userId) {
+  function fetchCards(userId, discriminator) {
     console.log('getMediaLib');
     let options = { headers: { "Content-Type": "application/json" } };
-    let url = config.backend.getCards + '?user_id='+userId;
+    let url = config.backend.getCards + '?user_id=' + userId;
+    if( discriminator != null || discriminator != undefined)  {
+      url = url + '&discriminator='+discriminator;
+    }
+    console.log('get cards URL ',url);
     return new Promise(function (resolve, reject) {
       axios
         .get(url, null, options)
         .then((res) => {
-          console.log(' fetch cards results', res.data.data);
-          setCardList(res.data);
+          if( discriminator != null || discriminator != undefined)  {
+            console.log(' fetch cards results website', res.data);
+            setCardList(res.data);
+          }else{
+            console.log(' fetch cards results cards', res.data);
+            setCarouselList(res.data);
+          }
           resolve(res.data);
         })
         .catch(function (error) {
@@ -76,7 +87,7 @@ export default function TweetComposer() {
   function createTweet() {
     console.log('create Tweet ', modalData.tweet, selectedCard)
     let options = { headers: { "Content-Type": "application/json" }, };
-    let body = { 'cardURI': selectedCard, 'tweet': modalData.tweet, 'oauthToken':oauthToken, 'oauthTokenSecret':oauthTokenSecret }
+    let body = { 'cardURI': selectedCard, 'tweet': modalData.tweet, 'oauthToken': oauthToken, 'oauthTokenSecret': oauthTokenSecret }
 
     axios
       .post(config.backend.tweet, body, options)
@@ -84,7 +95,7 @@ export default function TweetComposer() {
         console.log(' Tweet results', res.data);
         if (res.data) {
           setTweetStatus('Success');
-          setTweetMessage('Tweet '+res.data.id)
+          setTweetMessage('Tweet ' + res.data.id)
         } else {
           setTweetStatus('Failed');
           console.log('Error array ', res.data.error)
@@ -133,6 +144,8 @@ export default function TweetComposer() {
 
             <Container fluid="md">
               <Row md="auto"><p></p></Row>
+              <Row><h4>Single media cards</h4></Row>
+              <Row md="auto"><p></p></Row>
               <Row md="auto">
                 {cardList && cardList.map((card) => (
                   <div>
@@ -140,12 +153,40 @@ export default function TweetComposer() {
                       <Card style={{ width: '12rem' }}>
                         <Card.Body>
                           <ToggleButton key={card.media_key} id={card.media_key} name={card.media_key} type="radio" variant="primary" checked={radioValue === card.card_uri} value={card.card_uri} onChange={(e) => radioOnChange(e.currentTarget.value)}>
-                            Select
+                            Tweet
                           </ToggleButton>
                           <Card.Title>{card.name}</Card.Title>
                           <Card.Subtitle className="mb-2 text-muted">{card.card_type}</Card.Subtitle>
                         </Card.Body>
                         <Card.Img className="photo" variant="bottom" src={card.media_url} />
+                      </Card>
+
+                    </Col>
+                  </div>
+
+                ))}
+              </Row>
+            </Container>
+
+            <Container fluid="md">
+              <Row md="auto"><p></p></Row>
+              <Row><h4>Carousel media cards</h4></Row>
+              <Row md="auto"><p></p></Row>
+              <Row md="auto">
+                {carouselList && carouselList.map((card) => (
+                  <div>
+                    <Col>
+                      <Card style={{ width: '12rem' }}>
+                        <Card.Body>
+                          <ToggleButton key={card.id} id={card.id} name={card.id} type="radio" variant="primary" checked={radioValue === card.card_uri} value={card.card_uri} onChange={(e) => radioOnChange(e.currentTarget.value)}>
+                            Tweet
+                          </ToggleButton>
+                          <Card.Title>{card.name}</Card.Title>
+                          <Card.Subtitle className="mb-2 text-muted">{card.card_type}</Card.Subtitle>
+                        </Card.Body>
+                        {card.components[0] && card.components[0].media_keys.map((mediaKey) => (
+                        <Card.Img className="photo" variant="bottom" src={card.components[0].media_metadata[mediaKey].url} />
+                        ))}
                       </Card>
 
                     </Col>
