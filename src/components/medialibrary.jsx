@@ -69,8 +69,13 @@ export default function MediaLibrary() {
       .post(config.backend.mediaUpload, formData, null)
       .then((res) => {
         console.log(' upload media results', res.data);
+        if(res.data.code) {
+          setCardMessage(res.data.message);
+          setCardStatus(res.data.code);
+        } else{
         setCardMessage(res.data.data.media_status);
         setCardStatus('Success');
+        }
         setShowA(true);
         setTimeout(() => {  
           console.log("Sleeping for media fetch"); 
@@ -81,7 +86,7 @@ export default function MediaLibrary() {
       })
       .catch(function (error) {
         console.log(error);
-        setCardMessage('Media Upload Failed');
+        setCardMessage('Media Upload Failed - Check the image restrictions');
         setCardStatus('Failure');
         setShowA(true);
       });
@@ -140,8 +145,8 @@ export default function MediaLibrary() {
 
   const createCarousel = async () => {
     console.log('Create carousel ',carouselCardList)
-    if(carouselCardList.length < 2 )  {
-      alert('Please select a minimum of 2 cards');
+    if(carouselCardList.length < 2 || carouselCardList.length > 6 )  {
+      alert('Please select a minimum of 2 cards to a max of 6 cards');
       return;
     }
     let mediaKeyArr = []
@@ -202,7 +207,9 @@ export default function MediaLibrary() {
                 <Col><input type="file" name="file" className="form-control" onChange={onChangeHandler} /></Col>
                 <Col><button width="100%" type="button" className="btn btn-info" onClick={fileUploadHandler}>Upload File</button></Col>
               </Row>
-              <Row><Col><p>Images files are only allowed in the Twitter Media Library!</p></Col><Col><p></p></Col></Row>
+              <Row><Col><p>Images files are only allowed in the Twitter Media Library!</p>
+              <p>Use this <a href="https://redketchup.io/image-resizer">tool</a> to resize images to Twitter <a href="https://developer.twitter.com/en/docs/twitter-api/v1/media/upload-media/uploading-media/media-best-practices">Media Format</a></p>
+              </Col><Col><p></p></Col></Row>
               <Row><Col><p>Coming soon! Video/GIF upload feature</p></Col><Col><p></p></Col></Row>
               <Row md="auto"><p></p></Row>
               <Row md="auto"><h4>Single image cards</h4></Row>
