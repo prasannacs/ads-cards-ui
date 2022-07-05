@@ -122,6 +122,8 @@ export default function MediaLibrary() {
         if (res.data.card_uri) {
           setCardStatus('Success');
           setCardMessage(res.data.card_uri)
+          setSelectedMedia([]);
+          setCarouselCardList([]);
         } else {
           setCardStatus('Failed');
           console.log('Error array ', res.data.error)
@@ -207,10 +209,8 @@ export default function MediaLibrary() {
                 <Col><input type="file" name="file" className="form-control" onChange={onChangeHandler} /></Col>
                 <Col><button width="100%" type="button" className="btn btn-info" onClick={fileUploadHandler}>Upload File</button></Col>
               </Row>
-              <Row><Col><p>Images files are only allowed in the Twitter Media Library!</p>
-              <p>Use this <a href="https://redketchup.io/image-resizer">tool</a> to resize images to Twitter <a href="https://developer.twitter.com/en/docs/twitter-api/v1/media/upload-media/uploading-media/media-best-practices">Media Format</a></p>
+              <Row><Col><p>Images files are only allowed in the Twitter Media Library! PNG file format is recommended. Use this <a href="https://redketchup.io/image-resizer">tool</a> to resize images to Twitter <a href="https://developer.twitter.com/en/docs/twitter-api/v1/media/upload-media/uploading-media/media-best-practices">Media Format.</a> Coming soon! Video/GIF upload feature</p>
               </Col><Col><p></p></Col></Row>
-              <Row><Col><p>Coming soon! Video/GIF upload feature</p></Col><Col><p></p></Col></Row>
               <Row md="auto"><p></p></Row>
               <Row md="auto"><h4>Single image cards</h4></Row>
               <Row md="auto">
