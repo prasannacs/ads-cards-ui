@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col } from "react-bootstrap";
-import { Card, ToggleButton, Button, Modal, Form, Toast } from "react-bootstrap";
+import { Card, ToggleButton, Button, Modal, Form, Toast, Accordion } from "react-bootstrap";
 import { requestTwitterToken, getAccessTokens } from "./services"
 import config from '../config.js'
 
@@ -52,18 +52,18 @@ export default function TweetComposer() {
     console.log('getMediaLib');
     let options = { headers: { "Content-Type": "application/json" } };
     let url = config.backend.getCards + '?user_id=' + userId;
-    if( discriminator != null || discriminator != undefined)  {
-      url = url + '&discriminator='+discriminator;
+    if (discriminator != null || discriminator != undefined) {
+      url = url + '&discriminator=' + discriminator;
     }
-    console.log('get cards URL ',url);
+    console.log('get cards URL ', url);
     return new Promise(function (resolve, reject) {
       axios
         .get(url, null, options)
         .then((res) => {
-          if( discriminator != null || discriminator != undefined)  {
+          if (discriminator != null || discriminator != undefined) {
             console.log(' fetch cards results website', res.data);
             setCardList(res.data);
-          }else{
+          } else {
             console.log(' fetch cards results cards', res.data);
             setCarouselList(res.data);
           }
@@ -114,7 +114,6 @@ export default function TweetComposer() {
   return (
 
     <div>
-      <h2>Twitter Ads Cards Library</h2>
       <div>
         {reqToken && !userId &&
           <a href={reqToken}>Authorize with your Twitter credentials</a>}
@@ -142,60 +141,71 @@ export default function TweetComposer() {
               </Row>
             </Container>
 
-            <Container fluid="md">
-              <Row md="auto"><p></p></Row>
-              <Row><h4>Single media cards</h4></Row>
-              <Row md="auto"><p></p></Row>
-              <Row md="auto">
-                {cardList && cardList.map((card) => (
-                  <div>
-                    <Col>
-                      <Card style={{ width: '12rem' }}>
-                        <Card.Body>
-                          <ToggleButton key={card.media_key} id={card.media_key} name={card.media_key} type="radio" variant="primary" checked={radioValue === card.card_uri} value={card.card_uri} onChange={(e) => radioOnChange(e.currentTarget.value)}>
-                            Tweet
-                          </ToggleButton>
-                          <Card.Title>{card.name}</Card.Title>
-                          <Card.Subtitle className="mb-2 text-muted">{card.card_type}</Card.Subtitle>
-                        </Card.Body>
-                        <Card.Img className="photo" variant="bottom" src={card.media_url} />
-                      </Card>
+            <Accordion defaultActiveKey="1">
 
-                    </Col>
-                  </div>
+              <Container fluid="md">
+                <Row md="auto"><p></p></Row>
+                <Accordion.Item eventKey="0">
+                  <Accordion.Header><h5>Single image cards</h5></Accordion.Header>
+                  <Accordion.Body>
 
-                ))}
-              </Row>
-            </Container>
+                    <Row md="auto"><p></p></Row>
+                    <Row md="auto">
+                      {cardList && cardList.map((card) => (
+                        <div>
+                          <Col>
+                            <Card style={{ width: '12rem' }}>
+                              <Card.Body>
+                                <ToggleButton key={card.media_key} id={card.media_key} name={card.media_key} type="radio" variant="primary" checked={radioValue === card.card_uri} value={card.card_uri} onChange={(e) => radioOnChange(e.currentTarget.value)}>
+                                  Tweet
+                                </ToggleButton>
+                                <Card.Title>{card.name}</Card.Title>
+                                <Card.Subtitle className="mb-2 text-muted">{card.card_type}</Card.Subtitle>
+                              </Card.Body>
+                              <Card.Img className="photo" variant="bottom" src={card.media_url} />
+                            </Card>
 
-            <Container fluid="md">
-              <Row md="auto"><p></p></Row>
-              <Row><h4>Carousel media cards</h4></Row>
-              <Row md="auto"><p></p></Row>
-              <Row md="auto">
-                {carouselList && carouselList.map((card) => (
-                  <div>
-                    <Col>
-                      <Card style={{ width: '12rem' }}>
-                        <Card.Body>
-                          <ToggleButton key={card.id} id={card.id} name={card.id} type="radio" variant="primary" checked={radioValue === card.card_uri} value={card.card_uri} onChange={(e) => radioOnChange(e.currentTarget.value)}>
-                            Tweet
-                          </ToggleButton>
-                          <Card.Title>{card.name}</Card.Title>
-                          <Card.Subtitle className="mb-2 text-muted">{card.card_type}</Card.Subtitle>
-                        </Card.Body>
-                        {card.components[0] && card.components[0].media_keys.map((mediaKey) => (
-                        <Card.Img className="photo" variant="bottom" src={card.components[0].media_metadata[mediaKey].url} />
-                        ))}
-                      </Card>
+                          </Col>
+                        </div>
 
-                    </Col>
-                  </div>
+                      ))}
+                    </Row>
+                  </Accordion.Body>
+                </Accordion.Item>
+              </Container>
 
-                ))}
-              </Row>
-            </Container>
+              <Container fluid="md">
+                <Row md="auto"><p></p></Row>
+                <Accordion.Item eventKey="1">
+                  <Accordion.Header><h5>Carousel styled cards</h5></Accordion.Header>
+                  <Accordion.Body>
+                    <Row md="auto"><p></p></Row>
+                    <Row md="auto">
+                      {carouselList && carouselList.map((card) => (
+                        <div>
+                          <Col>
+                            <Card style={{ width: '12rem' }}>
+                              <Card.Body>
+                                <ToggleButton key={card.id} id={card.id} name={card.id} type="radio" variant="primary" checked={radioValue === card.card_uri} value={card.card_uri} onChange={(e) => radioOnChange(e.currentTarget.value)}>
+                                  Tweet
+                                </ToggleButton>
+                                <Card.Title>{card.name}</Card.Title>
+                                <Card.Subtitle className="mb-2 text-muted">{card.card_type}</Card.Subtitle>
+                              </Card.Body>
+                              {card.components[0] && card.components[0].media_keys.map((mediaKey) => (
+                                <Card.Img className="photo" variant="bottom" src={card.components[0].media_metadata[mediaKey].url} />
+                              ))}
+                            </Card>
 
+                          </Col>
+                        </div>
+
+                      ))}
+                    </Row>
+                  </Accordion.Body>
+                </Accordion.Item>
+              </Container>
+            </Accordion>
             <Container fluid="md">
               <Row md="auto"><p></p></Row>
               <Row>

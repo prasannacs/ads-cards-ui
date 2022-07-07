@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Button from "react-bootstrap/Button";
 import { Container, Row, Col } from "react-bootstrap";
-import { Card, Dropdown, ListGroup, ToggleButton, Modal, Form, Toast } from "react-bootstrap";
+import { Card, Dropdown, ListGroup, ToggleButton, Modal, Form, Toast, Accordion } from "react-bootstrap";
 import './library.css'
 import { requestTwitterToken, getAccessTokens, getMediaLibrary } from "./services"
 import config from '../config.js'
@@ -59,30 +59,30 @@ export default function MediaLibrary() {
     console.log('on file ', event.target.files);
     setSelectedFile(event.target.files[0]);
   }
-  
+
   const fileUploadHandler = async (event) => {
     let options = { headers: { "Content-Type": "multipart/form-data", "Content-Transfer-Encoding": "base64" }, };
     const formData = new FormData();
     formData.append('File', selectedFile);
-    formData.append('userId',userId);
+    formData.append('userId', userId);
     axios
       .post(config.backend.mediaUpload, formData, null)
       .then((res) => {
         console.log(' upload media results', res.data);
-        if(res.data.code) {
+        if (res.data.code) {
           setCardMessage(res.data.message);
           setCardStatus(res.data.code);
-        } else{
-        setCardMessage(res.data.data.media_status);
-        setCardStatus('Success');
+        } else {
+          setCardMessage(res.data.data.media_status);
+          setCardStatus('Success');
         }
         setShowA(true);
-        setTimeout(() => {  
-          console.log("Sleeping for media fetch"); 
+        setTimeout(() => {
+          console.log("Sleeping for media fetch");
           getMediaLibrary(userId).then((medList) => {
             setMediaList(medList);
-          }); 
-        }, 2000);     
+          });
+        }, 2000);
       })
       .catch(function (error) {
         console.log(error);
@@ -106,15 +106,15 @@ export default function MediaLibrary() {
     let options = { headers: { "Content-Type": "application/json" }, };
     let body;
     let backendURL;
-    if( selectedMedia.length === 1 )  {
+    if (selectedMedia.length === 1) {
       body = { 'mediaKey': selectedMedia, 'cardName': name, 'websiteTitle': title, 'websiteURL': url }
       backendURL = config.backend.createCard;
-    } else if(selectedMedia.length > 1) {
+    } else if (selectedMedia.length > 1) {
       body = { 'media_keys': selectedMedia, 'name': name, 'title': title, 'url': url }
       backendURL = config.backend.createCarousel
     }
-    console.log('modalData ', name, ' ',title,' ', url);
-    console.log('selectedMedia ',selectedMedia.length);
+    console.log('modalData ', name, ' ', title, ' ', url);
+    console.log('selectedMedia ', selectedMedia.length);
     axios
       .post(backendURL, body, options)
       .then((res) => {
@@ -146,13 +146,13 @@ export default function MediaLibrary() {
   }
 
   const createCarousel = async () => {
-    console.log('Create carousel ',carouselCardList)
-    if(carouselCardList.length < 2 || carouselCardList.length > 6 )  {
+    console.log('Create carousel ', carouselCardList)
+    if (carouselCardList.length < 2 || carouselCardList.length > 6) {
       alert('Please select a minimum of 2 cards to a max of 6 cards');
       return;
     }
     let mediaKeyArr = []
-    carouselCardList.forEach(function(card,index)  {
+    carouselCardList.forEach(function (card, index) {
       mediaKeyArr.push(card.media_key);
     })
     setSelectedMedia(mediaKeyArr);
@@ -162,10 +162,10 @@ export default function MediaLibrary() {
   const removeCarouselCard = async (media) => {
     console.log('Remove Card ', media.media_key)
     let filteredArray = [];
-    carouselCardList.forEach(function(value, index) {
-      if( value.media_key === media.media_key) {
+    carouselCardList.forEach(function (value, index) {
+      if (value.media_key === media.media_key) {
         // do nothing
-      } else{
+      } else {
         filteredArray.push(value);
       }
     })
@@ -174,7 +174,6 @@ export default function MediaLibrary() {
 
   return (
     <div>
-      <h2>Twitter Media Library</h2>
       <div>
         {reqToken && !userId &&
           <a href={reqToken}>Authorize with your Twitter credentials</a>}
@@ -185,7 +184,7 @@ export default function MediaLibrary() {
             <Container>
               <Row>
                 <Col md={6} className="mb-2">
-                  <Toast show={showA} onClose={toggleShowA}>
+                  <Toast show={showA} onClose={toggleShowA} delay="5000">
                     <Toast.Header>
                       <img
                         src="holder.js/20x20?text=%20"
@@ -201,130 +200,147 @@ export default function MediaLibrary() {
               </Row>
             </Container>
 
-            <Container fluid="md">
-              <Row md="auto"><p></p></Row>
-              <Row md="auto"><h4>Media upload</h4></Row>
-              <Row md="auto"><p></p></Row>
-              <Row>
-                <Col><input type="file" name="file" className="form-control" onChange={onChangeHandler} /></Col>
-                <Col><button width="100%" type="button" className="btn btn-info" onClick={fileUploadHandler}>Upload File</button></Col>
-              </Row>
-              <Row><Col><p>Images files are only allowed in the Twitter Media Library! PNG file format is recommended. Use this <a href="https://redketchup.io/image-resizer">tool</a> to resize images to Twitter <a href="https://developer.twitter.com/en/docs/twitter-api/v1/media/upload-media/uploading-media/media-best-practices">Media Format.</a> Coming soon! Video/GIF upload feature</p>
-              </Col><Col><p></p></Col></Row>
-              <Row md="auto"><p></p></Row>
-              <Row md="auto"><h4>Single image cards</h4></Row>
-              <Row md="auto">
-                {mediaList && mediaList.map((media) => (
-                  <div>
-                    <Col>
-                      <Card style={{ width: '12rem' }}>
-                        <Card.Body>
-                          <ToggleButton key={media.media_key} id={media.media_key} name={media.media_key} type="radio" variant="primary" checked={radioValue === media.media_key} value={media.media_key} onChange={(e) => radioOnChange(e.currentTarget.value)}>
-                            Create Card
-                          </ToggleButton>
-                          <Card.Title>{media.file_name}</Card.Title>
-                          <Card.Subtitle className="mb-2 text-muted">{media.type}</Card.Subtitle>
-                        </Card.Body>
-                        <Card.Img className="photo" variant="bottom" src={media.media_url} />
-                      </Card>
-
-                      <Modal show={show} onHide={handleClose} value={selectedMedia}>
-                        <Modal.Header closeButton>
-                          <Modal.Title>Create Ads Card</Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body>
-                          <Form onSubmit={createCard}>
-                            <Form.Label>Media Key: {selectedMedia}</Form.Label>
-                            <Form.Group className="mb-3" controlId="modalForm.ControlInput1">
-                              <Form.Label>Card Name</Form.Label>
-                              <Form.Control
-                                type="text"
-                                onChange={e => setName(e.target.value )}
-                                placeholder=""
-                                autoFocus
-                              />
-                            </Form.Group>
-                            <Form.Group className="mb-3" controlId="modalForm.ControlInput2">
-                              <Form.Label>Website Title</Form.Label>
-                              <Form.Control
-                                type="text"
-                                onChange={e => setTitle(e.target.value )}
-                                placeholder=""
-                                autoFocus
-                              />
-                            </Form.Group>
-                            <Form.Group className="mb-3" controlId="modalForm.ControlInput3">
-                              <Form.Label>Website URL</Form.Label>
-                              <Form.Control
-                                type="text"
-                                onChange={e => setUrl(e.target.value )}
-                                placeholder=""
-                                autoFocus
-                              />
-                            </Form.Group>
-
-                          </Form>
-                        </Modal.Body>
-                        <Modal.Footer>
-                          <Button variant="secondary" onClick={handleClose}>
-                            Cancel
-                          </Button>
-                          <Button variant="primary" onClick={createCard}>
-                            Create Card
-                          </Button>
-                        </Modal.Footer>
-                      </Modal>
-                    </Col>
-                  </div>
-
-                ))}
-              </Row>
-            </Container>
-
-            <Container>
-              <Row md="auto"><p></p></Row>
-              <Row md="auto"><h4>Create Carousel Styled Cards</h4></Row>
-              <Row md="auto"><p></p></Row>
-              <Row md="auto">
-
-                <Col>
-                  <Dropdown>
-                    <Dropdown.Toggle variant="info" id="dropdown-basic">
-                      Pick Cards for Carousel
-                    </Dropdown.Toggle>
-
-                    <Dropdown.Menu>
+            <Accordion defaultActiveKey={['0', '1', '2']} alwaysOpen>
+              <Container fluid="md">
+                <Row md="auto"><p></p></Row>
+                <Accordion.Item eventKey="0">
+                  <Accordion.Header><h5>Step 1: Upload Media</h5></Accordion.Header>
+                  <Accordion.Body>
+                    <Row md="auto"><p></p></Row>
+                    <Row>
+                      <Col><input type="file" name="file" className="form-control" onChange={onChangeHandler} /></Col>
+                      <Col><button width="100%" type="button" className="btn btn-info" onClick={fileUploadHandler}>Upload File</button></Col>
+                    </Row>
+                    <Row><Col><p>PNG file format is recommended. Use this <a target="_blank" href="https://redketchup.io/image-resizer">tool</a> to resize images to Twitter <a target="_blank" href="https://developer.twitter.com/en/docs/twitter-api/v1/media/upload-media/uploading-media/media-best-practices">Media Format.</a> Coming soon! Video/GIF upload feature</p>
+                    </Col><Col><p></p></Col></Row>
+                    <Row md="auto"><p></p></Row>
+                  </Accordion.Body>
+                </Accordion.Item>
+                <Accordion.Item eventKey="1">
+                  <Accordion.Header><h5>Step 2a (optional): Create single image cards</h5></Accordion.Header>
+                  <Accordion.Body>
+                    <Row md="auto">
                       {mediaList && mediaList.map((media) => (
                         <div>
-                          <Dropdown.Item onClick={(e) => dropOnChange(media)}>{media.file_name}</Dropdown.Item>
+                          <Col>
+                            <Card style={{ width: '12rem' }}>
+                              <Card.Body>
+                                <ToggleButton key={media.media_key} id={media.media_key} name={media.media_key} type="radio" variant="primary" checked={radioValue === media.media_key} value={media.media_key} onChange={(e) => radioOnChange(e.currentTarget.value)}>
+                                  Create Card
+                                </ToggleButton>
+                                <Card.Title>{media.file_name}</Card.Title>
+                                <Card.Subtitle className="mb-2 text-muted">{media.type}</Card.Subtitle>
+                              </Card.Body>
+                              <Card.Img className="photo" variant="bottom" src={media.media_url} />
+                            </Card>
+
+                            <Modal show={show} onHide={handleClose} value={selectedMedia}>
+                              <Modal.Header closeButton>
+                                <Modal.Title>Create Ads Card</Modal.Title>
+                              </Modal.Header>
+                              <Modal.Body>
+                                <Form onSubmit={createCard}>
+                                  <Form.Label>Media Key: {selectedMedia}</Form.Label>
+                                  <Form.Group className="mb-3" controlId="modalForm.ControlInput1">
+                                    <Form.Label>Card Name</Form.Label>
+                                    <Form.Control
+                                      type="text"
+                                      onChange={e => setName(e.target.value)}
+                                      placeholder=""
+                                      autoFocus
+                                    />
+                                  </Form.Group>
+                                  <Form.Group className="mb-3" controlId="modalForm.ControlInput2">
+                                    <Form.Label>Website Title</Form.Label>
+                                    <Form.Control
+                                      type="text"
+                                      onChange={e => setTitle(e.target.value)}
+                                      placeholder=""
+                                      autoFocus
+                                    />
+                                  </Form.Group>
+                                  <Form.Group className="mb-3" controlId="modalForm.ControlInput3">
+                                    <Form.Label>Website URL</Form.Label>
+                                    <Form.Control
+                                      type="text"
+                                      onChange={e => setUrl(e.target.value)}
+                                      placeholder=""
+                                      autoFocus
+                                    />
+                                    <p>The Website URL must adhere to the format: https://www.cta-website.com</p>
+
+                                  </Form.Group>
+
+                                </Form>
+                              </Modal.Body>
+                              <Modal.Footer>
+                                <Button variant="secondary" onClick={handleClose}>
+                                  Cancel
+                                </Button>
+                                <Button variant="primary" onClick={createCard}>
+                                  Create Card
+                                </Button>
+                              </Modal.Footer>
+                            </Modal>
+                          </Col>
                         </div>
 
                       ))}
-                    </Dropdown.Menu>
-                  </Dropdown>
-                  <p></p>
-                  <Button onClick={(e) => createCarousel()} variant="info">Create Carousel</Button>
-                </Col>
+                    </Row>
+                  </Accordion.Body>
+                </Accordion.Item>
+              </Container>
 
-                <Col>
-                  <ListGroup horizontal>
-                  <ListGroup.Item variant='primary'>Selected Cards</ListGroup.Item>
-                    {carouselCardList && carouselCardList.map((media) => (
-                      <div>
-                        <ListGroup.Item>
-                        <div className="fw-bold">{media.file_name}</div>
-                        <Button onClick={() => removeCarouselCard(media)} size = 'sm' variant="outline-danger">Remove</Button>
-                        </ListGroup.Item>
-         
-                      </div>
 
-                    ))}
-                  </ListGroup>
-                </Col>
-              </Row>
-              <Row md="auto"><p></p></Row>
-            </Container>
+              <Container>
+                <Row md="auto"><p></p></Row>
+                <Accordion.Item eventKey="2">
+                  <Accordion.Header><h5>Step 2b: Create Carousel Styled Cards</h5></Accordion.Header>
+                  <Accordion.Body>
+                    <Row md="auto"><p></p></Row>
+                    <Row md="auto">
 
+                      <Col>
+                        <Dropdown>
+                          <Dropdown.Toggle variant="info" id="dropdown-basic">
+                            Pick Cards for Carousel
+                          </Dropdown.Toggle>
+                          <p>If the dropdown is empty, <br></br> upload media from Step 1</p>
+                          <Dropdown.Menu>
+                            {mediaList && mediaList.map((media) => (
+                              <div>
+                                <Dropdown.Item onClick={(e) => dropOnChange(media)}>{media.file_name}</Dropdown.Item>
+                              </div>
+
+                            ))}
+                          </Dropdown.Menu>
+                        </Dropdown>
+                        <p></p>
+                        <Button onClick={(e) => createCarousel()} variant="info">Create Carousel</Button>
+                      </Col>
+
+                      <Col>
+                        <ListGroup horizontal>
+                          <ListGroup.Item variant='primary'>Selected Cards</ListGroup.Item>
+                          {carouselCardList && carouselCardList.map((media) => (
+                            <div>
+                              <ListGroup.Item>
+                                <div className="fw-bold">{media.file_name}</div>
+                                <Button onClick={() => removeCarouselCard(media)} size='sm' variant="outline-danger">Remove</Button>
+                              </ListGroup.Item>
+
+                            </div>
+
+                          ))}
+                        </ListGroup>
+                      </Col>
+                    </Row>
+                    <Row md="auto"><p></p></Row>
+                  </Accordion.Body>
+                </Accordion.Item>
+              </Container>
+
+            </Accordion>
           </>
 
         }
