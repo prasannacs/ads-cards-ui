@@ -42,31 +42,41 @@ export default function TweetComposer() {
         setOauthToken(accessTokens.oauthToken);
         setOauthTokenSecret(accessTokens.oauthTokenSecret);
         setUserId(accessTokens.userId);
-        fetchCards(accessTokens.userId, 'website');
-        fetchCards(accessTokens.userId, null);
+        fetchCards(accessTokens.userId).then(() =>  {
+          console.log('getCardList ',cardList);
+          console.log('getCarouselList ',carouselList); 
+        });
       })
   }
 
 
-  function fetchCards(userId, discriminator) {
+  function fetchCards(userId) {
     console.log('getMediaLib');
     let options = { headers: { "Content-Type": "application/json" } };
     let url = config.backend.getCards + '?user_id=' + userId;
-    if (discriminator != null || discriminator != undefined) {
-      url = url + '&discriminator=' + discriminator;
-    }
+    // if (discriminator != null || discriminator != undefined) {
+    //   url = url + '&discriminator=' + discriminator;
+    // }
     console.log('get cards URL ', url);
     return new Promise(function (resolve, reject) {
       axios
         .get(url, null, options)
         .then((res) => {
-          if (discriminator != null || discriminator != undefined) {
-            console.log(' fetch cards results website', res.data);
-            setCardList(res.data);
-          } else {
-            console.log(' fetch cards results cards', res.data);
-            setCarouselList(res.data);
-          }
+          console.log(' fetch cards results website', res.data);
+          if(res.data.length != undefined)  {
+            let cardsArray = [];
+            let carouselArray = []
+            res.data.forEach((card) =>  {
+              console.log('card -- ',card.card_type);
+              if (card.card_type === 'IMAGE_WEBSITE') {          
+                cardsArray.push(card);
+              } else if (card.card_type === 'IMAGE_CAROUSEL_WEBSITE') {
+                carouselArray.push(card);
+              }
+            })
+            setCardList(cardsArray);
+            setCarouselList(carouselArray);
+        }
           resolve(res.data);
         })
         .catch(function (error) {
@@ -156,13 +166,13 @@ export default function TweetComposer() {
                           <Col>
                             <Card style={{ width: '12rem' }}>
                               <Card.Body>
-                                <ToggleButton key={card.media_key} id={card.media_key} name={card.media_key} type="radio" variant="primary" checked={radioValue === card.card_uri} value={card.card_uri} onChange={(e) => radioOnChange(e.currentTarget.value)}>
+                                <ToggleButton key={card.components[0].media_key} id={card.components[0].media_key} name={card.components[0].media_key} type="radio" variant="primary" checked={radioValue === card.card_uri} value={card.card_uri} onChange={(e) => radioOnChange(e.currentTarget.value)}>
                                   Tweet
                                 </ToggleButton>
                                 <Card.Title>{card.name}</Card.Title>
                                 <Card.Subtitle className="mb-2 text-muted">{card.card_type}</Card.Subtitle>
                               </Card.Body>
-                              <Card.Img className="photo" variant="bottom" src={card.media_url} />
+                              <Card.Img className="photo" variant="bottom" src={card.components[0].media_metadata[card.components[0].media_key].url} />
                             </Card>
 
                           </Col>
